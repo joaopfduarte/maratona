@@ -10,7 +10,7 @@ typedef struct
     float nota;
 } Pessoa;
 
-typedef struct 
+typedef struct
 {
     char *letra;
     int valor;
@@ -20,7 +20,7 @@ typedef int idade;
 typedef float nota;
 typedef char *nome;
 
-char *alocar(nome no);
+char *alocar(char *iniciais);
 
 int main()
 {
@@ -29,6 +29,7 @@ int main()
     float totalNotas = 0.0;
     int capacidade = 10;
     char *iniciais = (char *)malloc(capacidade * sizeof(char));
+    char *top5 = (char *)malloc(5 * sizeof(char));
 
     for (int i = 0; i < 5; i++)
     {
@@ -69,13 +70,12 @@ int main()
             ;
     }
     free(iniciais);
-    iniciais = alocar(aluno.nome);
+    top5 = alocar(iniciais);
 
-    
     return 0;
 }
 
-char *alocar(nome no)
+char *alocar(char *iniciais)
 {
     int *contador = (int *)malloc(26 * sizeof(int));
     char *top5 = (char *)malloc(5 * sizeof(char));
@@ -91,30 +91,26 @@ char *alocar(nome no)
         contador[0] = 0;
     }
 
-    if (no == NULL)
+    for (int i = 0; i < (sizeof(iniciais) / (sizeof(iniciais[0]))); i++)
     {
-        printf("Log Error: informação nula\n");
-        return;
-    }
+        encontrado = strchr(letras, tolower(iniciais[i]));
+        posicao = encontrado - letras;
+        if (!encontrado)
+        {
+            posicao = 0;
+        }
+        else if (posicao == 26)
+        {
+            posicao = 0;
+        }
+        else
+        {
+            posicao++;
+        }
 
-    encontrado = strchr(letras, tolower(no[0]));
-    posicao = encontrado - letras;
-    if (!encontrado)
-    {
-        posicao = 0;
+        iteradorAlfabetico = contador[posicao];
+        contador[posicao] = iteradorAlfabetico++;
     }
-    else if (posicao == 26)
-    {
-        posicao = 0;
-    }
-    else
-    {
-        posicao++;
-    }
-
-    iteradorAlfabetico = contador[posicao];
-    contador[posicao] = iteradorAlfabetico++;
-
     free(contador);
     contador = NULL;
     return top5;
