@@ -3,57 +3,45 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-typedef struct
-{
+typedef struct {
     char nome[50];
     int idade;
     float nota;
 } Pessoa;
 
-typedef struct
-{
-    char *letra;
+typedef struct {
+    char letra;
     int valor;
 } TopCinco;
 
-typedef int idade;
-typedef float nota;
-typedef char *nome;
+int comparar(const void *a, const void *b) {
+    TopCinco *x = (TopCinco *)a;
+    TopCinco *y = (TopCinco *)b;
+    return y->valor - x->valor;
+}
 
-char *alocar(char *iniciais);
+TopCinco *contar_letras(char *iniciais, int totalAlunos);
 
-int main()
-{
+int main() {
     Pessoa aluno;
     int totalAlunos = 0;
     float totalNotas = 0.0;
     int capacidade = 10;
-    char *iniciais = (char *)malloc(capacidade * sizeof(char));
-    char *top5 = (char *)malloc(5 * sizeof(char));
+    char *iniciais = malloc(capacidade * sizeof(char));
 
-    for (int i = 0; i < 5; i++)
-    {
-        iniciais[i] = 0;
+    if (iniciais == NULL) {
+        printf("Erro ao alocar memória!\n");
+        return 1;
     }
 
-    for (int i = 0; i < 50; i++)
-    {
-        aluno.nome[i] = 0;
-    }
-
-    for (int i = 0; scanf("%[^\n] %d %f", aluno.nome, &aluno.idade, &aluno.nota) == 3; i++)
-    {
-        int c;
-
-        if (totalAlunos >= capacidade)
-        {
+    while (scanf("%s %d %f", aluno.nome, &aluno.idade, &aluno.nota) == 3) {
+        if (totalAlunos >= capacidade) {
             capacidade *= 2;
             char *novo = realloc(iniciais, capacidade * sizeof(char));
-            if (novo == NULL)
-            {
+            if (novo == NULL) {
                 printf("Erro ao realocar memória!\n");
                 free(iniciais);
-                exit(1);
+                return 1;
             }
             iniciais = novo;
         }
@@ -66,52 +54,47 @@ int main()
         iniciais[totalAlunos] = aluno.nome[0];
         totalAlunos++;
         totalNotas += aluno.nota;
-        while ((c = getchar()) != '\n' && c != EOF)
-            ;
     }
+
+    printf("\nEstatisticas Finais:\n");
+    printf("Total de alunos: %d\n", totalAlunos);
+    printf("Media das notas: %.2f\n", totalNotas / totalAlunos);
+
+    TopCinco *top5 = contar_letras(iniciais, totalAlunos);
+
+    printf("Top 5 letras mais frequentes:\n");
+    for (int i = 0; i < 5 && top5[i].valor > 0; i++) {
+        float percentual = (top5[i].valor * 100.0f) / totalAlunos;
+        printf("%c: %d (%.1f%%)\n", top5[i].letra, top5[i].valor, percentual);
+    }
+
     free(iniciais);
-    top5 = alocar(iniciais);
+    free(top5);
 
     return 0;
 }
 
-char *alocar(char *iniciais)
-{
-    int *contador = (int *)malloc(26 * sizeof(int));
-    char *top5 = (char *)malloc(5 * sizeof(char));
-
-    const char *letras = "abcdefghijklmnopqrstuvwxyz";
-    const char *encontrado;
-
-    int posicao = 0;
-    int iteradorAlfabetico = 0;
-
-    for (int i = 0; i < (sizeof(contador) / sizeof(contador[0])); i++)
-    {
-        contador[0] = 0;
+TopCinco *contar_letras(char *iniciais, int totalAlunos) {
+    int contador[26] = {0};  
+    for (int i = 0; i < totalAlunos; i++) {
+        char ch = toupper(iniciais[i]);
+        if (ch >= 'A' && ch <= 'Z') {
+            contador[ch - 'A']++;
+        }
     }
 
-    for (int i = 0; i < (sizeof(iniciais) / (sizeof(iniciais[0]))); i++)
-    {
-        encontrado = strchr(letras, tolower(iniciais[i]));
-        posicao = encontrado - letras;
-        if (!encontrado)
-        {
-            posicao = 0;
-        }
-        else if (posicao == 26)
-        {
-            posicao = 0;
-        }
-        else
-        {
-            posicao++;
-        }
-
-        iteradorAlfabetico = contador[posicao];
-        contador[posicao] = iteradorAlfabetico++;
+    TopCinco *top = malloc(26 * sizeof(TopCinco));
+    if (top == NULL) {
+        printf("Erro ao alocar memória para TopCinco!\n");
+        exit(1);
     }
-    free(contador);
-    contador = NULL;
-    return top5;
+
+    for (int i = 0; i < 26; i++) {
+        top[i].letra = 'A' + i;
+        top[i].valor = contador[i];
+    }
+
+    qsort(top, 26, sizeof(TopCinco), comparar);
+
+    return top;  
 }
